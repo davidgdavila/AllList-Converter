@@ -13,11 +13,8 @@ from kivy.core.window import Window
 import tkinter as tk
 from tkinter import filedialog as fd
 
-
-
-
-
 class Nuevo_Hilo(object):
+
     def seleccionar_salvar_archivo(self, ruta_abrir):
         root = tk.Tk()
         root.withdraw()
@@ -59,6 +56,36 @@ class Nuevo_Hilo(object):
             titulo_serie = titulo_serie.replace(a, b)
         return titulo_serie
 
+    def crear_lista_dyno(self, ruta_guardar):
+        texto = "<section> " + self.texto_limpio(str(self.hoja1["G3"].value)) + "\n"
+        for i in range(1, self.longitudfilas):
+            E = self.hoja1["E" + str(i)].value
+            D = self.hoja1["D" + str(i)].value
+            F = self.hoja1["F" + str(i)].value
+
+            if D:
+                if self.texto_limpio(str(F)).__contains__("SPOT") or self.texto_limpio(str(F)).__contains__("RTC"):
+                    texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
+                else:
+                    if self.texto_limpio(str(F)).__contains__("SERIE"):
+                        pass
+                    else:
+                        if E:
+                            texto += "<section> " + self.texto_limpio(str(F)) + "\n" \
+                                     + str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" + "99:99:99:99" + "\n"
+                        else:
+                            pass
+            else:
+                if E:
+                    texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
+                else:
+                    pass
+        d = ruta_guardar.replace(".txt", "")
+        with open(d + "dyno.txt", 'w') as stream:
+            stream.write(texto)
+
+        MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
+
 
     def procesar_archivo(self, ruta_abrir, ruta_guardar):
         texto = ""
@@ -66,45 +93,21 @@ class Nuevo_Hilo(object):
             hilo2 = threading.Thread(target = self.cargar_barra)
             hilo2.start()
             doc = load_workbook(filename=ruta_abrir, data_only=True)
-            hoja1 = doc.active
-            filas = tuple(hoja1.rows)
-            longitudfilas = len(filas)
-            #MDApp.get_running_app().root.eti1.text = "Convirtiendo archivo..."
-            texto = "<section> " + self.texto_limpio(str(hoja1["G3"].value)) + "\n"
-            for i in range(1, longitudfilas):
-                E = hoja1["E" + str(i)].value
-                D = hoja1["D" + str(i)].value
-                F = hoja1["F" + str(i)].value
+            self.hoja1 = doc.active
+            self.filas = tuple(self.hoja1.rows)
+            self.longitudfilas = len(self.filas)
+            if  MDApp.get_running_app().root.cbox_dyno.active:
+                self.crear_lista_dyno(ruta_guardar)
+            else:
+                print("no se realizo la playlist de dyno")
 
-                if D:
-                    if self.texto_limpio(str(F)).__contains__("SPOT") or self.texto_limpio(str(F)).__contains__("RTC"):
-                        texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
-                    else:
-                        if self.texto_limpio(str(F)).__contains__("SERIE"):
-                            pass
-                        else:
-                            if E:
-                                texto += "<section> " + self.texto_limpio(str(F)) + "\n" \
-                                         + str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" + "99:99:99:99" + "\n"
-                            else:
-                                pass
-                else:
-                    if E:
-                        texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
-                    else:
-                        pass
-            d = ruta_guardar.replace(".txt", "")
-            with open(d + "dyno.txt", 'w') as stream:
-                stream.write(texto)
-
-            MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
         except IndexError:
             MDApp.get_running_app().root.eti1.text = "El formato no es correcto"
-        except UnicodeDecodeError:
-            MDApp.get_running_app().root.eti1.text = "Error:¡Checa que sea un txt!"
-        except:
-            MDApp.get_running_app().root.eti1.text = "No se realizó la conversion.Error desconocido"
 
+        except UnicodeDecodeError:
+            MDApp.get_running_app().root.eti1.text = "Error: No abriste un archivo de excel"
+        except:
+            MDApp.get_running_app().root.eti1.text = "Error desconocido. Escribe a david.gdavila08@gmail.com"
 
 class Acerca_de(MDScreen):
     pass
