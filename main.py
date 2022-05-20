@@ -13,91 +13,97 @@ from kivy.core.window import Window
 import tkinter as tk
 from tkinter import filedialog as fd
 
-def seleccionar_salvar_archivo(ruta_abrir):
-    root = tk.Tk()
-    root.withdraw()
-    d = os.path.dirname(ruta_abrir)
-    s = os.path.basename(ruta_abrir).replace(".xlsx", "")
-    filename = fd.asksaveasfilename(
-        initialfile = s + ".txt",
-        title = 'Salvar Archivo',
-        initialdir = d,
-        filetypes = (('text files', '*.txt'), ('All files', '*.*')))
-    ruta_guardar = filename
-    if filename:
-        hilo_procesar = threading.Thread(target=procesar_archivo, args=(ruta_abrir, ruta_guardar))
-        hilo_procesar.start()
-    else:
-        MDApp.get_running_app().root.eti1.text = "Arrastra y suelta la pauta aquí."
-
-def cargar_barra():
-    for i in range(0,100):
-        valor =+ i
-        time.sleep(0.04)
-        MDApp.get_running_app().root.eti1.text = "Convirtiendo archivo..." + str(round(valor)) + "%"
-        MDApp.get_running_app().root.barra.value = valor
 
 
-def texto_limpio(titulo_serie):
-    reemplazar = (
-        ("Á", "A"),
-        ("É", "E"),
-        ("Í", "I"),
-        ("Ó", "O"),
-        ("Ú", "U"),
-        (" ", "_"),
-        (".", "" ),
-        (":", "" ),
-        (",", "" ),
-    )
-    for a, b in reemplazar:
-        titulo_serie = titulo_serie.replace(a, b)
-    return titulo_serie
 
-def procesar_archivo(ruta_abrir, ruta_guardar):
-    texto = ""
-    try:
-        hilo2 = threading.Thread(target=cargar_barra)
-        hilo2.start()
-        doc = load_workbook(filename=ruta_abrir, data_only=True)
-        hoja1 = doc.active
-        filas = tuple(hoja1.rows)
-        longitudfilas = len(filas)
-        #MDApp.get_running_app().root.eti1.text = "Convirtiendo archivo..."
-        texto = "<section> " + texto_limpio(str(hoja1["G3"].value)) + "\n"
-        for i in range(1, longitudfilas):
-            E = hoja1["E" + str(i)].value
-            D = hoja1["D" + str(i)].value
-            F = hoja1["F" + str(i)].value
 
-            if D:
-                if texto_limpio(str(F)).__contains__("SPOT") or texto_limpio(str(F)).__contains__("RTC"):
-                    texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
-                else:
-                    if texto_limpio(str(F)).__contains__("SERIE"):
-                        pass
+class Nuevo_Hilo(object):
+    def seleccionar_salvar_archivo(self, ruta_abrir):
+        root = tk.Tk()
+        root.withdraw()
+        d = os.path.dirname(ruta_abrir)
+        s = os.path.basename(ruta_abrir).replace(".xlsx", "")
+        filename = fd.asksaveasfilename(
+            initialfile = s + ".txt",
+            title = 'Salvar Archivo',
+            initialdir = d,
+            filetypes = (('text files', '*.txt'), ('All files', '*.*')))
+        ruta_guardar = filename
+        if filename:
+            hilo_procesar = threading.Thread(target = self.procesar_archivo,
+                                             args=(ruta_abrir, ruta_guardar))
+            hilo_procesar.start()
+        else:
+            MDApp.get_running_app().root.eti1.text = "Arrastra y suelta la pauta aquí."
+
+    def cargar_barra(self):
+        for i in range(0,100):
+            valor =+ i
+            time.sleep(0.04)
+            MDApp.get_running_app().root.eti1.text = "Convirtiendo archivo..." + str(round(valor)) + "%"
+            MDApp.get_running_app().root.barra.value = valor
+
+    def texto_limpio(self, titulo_serie):
+        reemplazar = (
+            ("Á", "A"),
+            ("É", "E"),
+            ("Í", "I"),
+            ("Ó", "O"),
+            ("Ú", "U"),
+            (" ", "_"),
+            (".", ""),
+            (":", ""),
+            (",", ""),
+        )
+        for a, b in reemplazar:
+            titulo_serie = titulo_serie.replace(a, b)
+        return titulo_serie
+
+
+    def procesar_archivo(self, ruta_abrir, ruta_guardar):
+        texto = ""
+        try:
+            hilo2 = threading.Thread(target = self.cargar_barra)
+            hilo2.start()
+            doc = load_workbook(filename=ruta_abrir, data_only=True)
+            hoja1 = doc.active
+            filas = tuple(hoja1.rows)
+            longitudfilas = len(filas)
+            #MDApp.get_running_app().root.eti1.text = "Convirtiendo archivo..."
+            texto = "<section> " + self.texto_limpio(str(hoja1["G3"].value)) + "\n"
+            for i in range(1, longitudfilas):
+                E = hoja1["E" + str(i)].value
+                D = hoja1["D" + str(i)].value
+                F = hoja1["F" + str(i)].value
+
+                if D:
+                    if self.texto_limpio(str(F)).__contains__("SPOT") or self.texto_limpio(str(F)).__contains__("RTC"):
+                        texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
                     else:
-                        if E:
-                            texto += "<section> " + texto_limpio(str(F)) + "\n" \
-                                     + str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" + "99:99:99:99" + "\n"
-                        else:
+                        if self.texto_limpio(str(F)).__contains__("SERIE"):
                             pass
-            else:
-                if E:
-                    texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
+                        else:
+                            if E:
+                                texto += "<section> " + self.texto_limpio(str(F)) + "\n" \
+                                         + str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" + "99:99:99:99" + "\n"
+                            else:
+                                pass
                 else:
-                    pass
-        d = ruta_guardar.replace(".txt", "")
-        with open(d + "dyno.txt", 'w') as stream:
-            stream.write(texto)
+                    if E:
+                        texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
+                    else:
+                        pass
+            d = ruta_guardar.replace(".txt", "")
+            with open(d + "dyno.txt", 'w') as stream:
+                stream.write(texto)
 
-        MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
-    except IndexError:
-        MDApp.get_running_app().root.eti1.text = "El formato no es correcto"
-    except UnicodeDecodeError:
-        MDApp.get_running_app().root.eti1.text = "Error:¡Checa que sea un txt!"
-    except:
-        MDApp.get_running_app().root.eti1.text = "No se realizó la conversion.Error desconocido"
+            MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
+        except IndexError:
+            MDApp.get_running_app().root.eti1.text = "El formato no es correcto"
+        except UnicodeDecodeError:
+            MDApp.get_running_app().root.eti1.text = "Error:¡Checa que sea un txt!"
+        except:
+            MDApp.get_running_app().root.eti1.text = "No se realizó la conversion.Error desconocido"
 
 
 class Acerca_de(MDScreen):
@@ -132,7 +138,7 @@ class Principal(MDScreen):
             self.ids.eti1.text = "Debe de seleccionar al menos una lista"
 
     def hilo(self):
-        hilo_ventana_salvar = threading.Thread(target=seleccionar_salvar_archivo, args=(self.ruta_abrir,))
+        hilo_ventana_salvar = threading.Thread(target= Nuevo_Hilo().seleccionar_salvar_archivo, args=(self.ruta_abrir,))
         hilo_ventana_salvar.start()
 
     def seleccionar_salvar_archivo(self):
@@ -147,7 +153,7 @@ class Principal(MDScreen):
             filetypes=(('text files', '*.txt'), ('All files', '*.*')))
         self.ruta_guardar=filename
         if filename:
-            hilo1 = threading.Thread(target=procesar_archivo, args=(self.ruta_abrir,self.ruta_guardar))
+            hilo1 = threading.Thread(target= Nuevo_Hilo().procesar_archivo, args=(self.ruta_abrir,self.ruta_guardar))
             hilo1.start()
         else:
             pass
