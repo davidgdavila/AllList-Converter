@@ -1,12 +1,13 @@
 import os
 import threading
 import time
+from kivy import Config
 from kivy.lang import Builder
-from kivy.properties import BooleanProperty
+from kivy.properties import BooleanProperty, StringProperty
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.popup import Popup
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.button import MDFlatButton
-from kivymd.uix.dialog import MDDialog
 from kivymd.uix.screen import MDScreen
 from openpyxl import load_workbook
 from kivy.core.window import Window
@@ -36,7 +37,7 @@ class Nuevo_Hilo(object):
     def cargar_barra(self):
         for i in range(0,100):
             valor =+ i
-            time.sleep(0.04)
+            time.sleep(0.05)
             MDApp.get_running_app().root.eti1.text = "Convirtiendo archivo..." + str(round(valor)) + "%"
             MDApp.get_running_app().root.barra.value = valor
 
@@ -81,11 +82,27 @@ class Nuevo_Hilo(object):
                 else:
                     pass
         d = ruta_guardar.replace(".txt", "")
-        with open(d + "dyno.txt", 'w') as stream:
+        with open(d + "_dyno.txt", 'w') as stream:
             stream.write(texto)
-
         MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
 
+
+    def crear_lista_versio(self,ruta_guardar):
+        texto = ""
+        for i in range(1, self.longitudfilas):
+            E = self.hoja1["E"+ str(i)].value
+            F = self.hoja1["F" + str(i)].value
+            G = self.hoja1["G" + str(i)].value
+            H = self.hoja1["H" + str(i)].value
+            J = self.hoja1["J" + str(i)].value
+            L = self.hoja1["L" + str(i)].value
+            texto += "\t\t\t\t"+str(E) + "\t" + str(F) + "\t" + str(G) + "\t"\
+                     + str(H) + "\t\t" + str(J) + "\t\t" + str(L) + "\n"
+            texto = texto.replace(str(None), "")
+        d =ruta_guardar.replace(".txt","")
+        with open(d +"_versio.txt", 'w') as stream:
+            stream.write(texto)
+        MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
 
     def procesar_archivo(self, ruta_abrir, ruta_guardar):
         texto = ""
@@ -98,8 +115,14 @@ class Nuevo_Hilo(object):
             self.longitudfilas = len(self.filas)
             if  MDApp.get_running_app().root.cbox_dyno.active:
                 self.crear_lista_dyno(ruta_guardar)
+                if MDApp.get_running_app().root.cbox_versio.active:
+                    self.crear_lista_versio(ruta_guardar)
+                else:
+                    pass
+            elif MDApp.get_running_app().root.cbox_versio.active:
+                self.crear_lista_versio(ruta_guardar)
             else:
-                print("no se realizo la playlist de dyno")
+                pass
 
         except IndexError:
             MDApp.get_running_app().root.eti1.text = "El formato no es correcto"
@@ -108,9 +131,6 @@ class Nuevo_Hilo(object):
             MDApp.get_running_app().root.eti1.text = "Error: No abriste un archivo de excel"
         except:
             MDApp.get_running_app().root.eti1.text = "Error desconocido. Escribe a david.gdavila08@gmail.com"
-
-class Acerca_de(MDScreen):
-    pass
 
 class Principal(MDScreen):
     texto = ""
@@ -177,18 +197,39 @@ class Principal(MDScreen):
         else:
             self.ids.eti1.text = "Debe de seleccionar al menos una lista"
 
-class Version(MDBoxLayout):
-    pass
+    def show_acerca_de(self):
+        contenido = Acerca_de()
+        self.ventana_acercad = Popup(
+            title = "Acerca de AllListConverter",
+            content = contenido,
+            size_hint =(.7,.7))
+        self.ventana_acercad.open()
+
+class Acerca_de(MDBoxLayout):
+    texto_etiqueta= StringProperty("Fecha: 20/mayo/2022\n\n"
+                                   "Autor: David Israel González Dávila.\n"
+                                   "david.gdavila08@gmail.com \n"
+                                   "Versión: 1.0.1\n\n"
+                                
+                                   "AllListConverter fue crreado para realizar\n"
+                                   "las playlist de canal 14 de una forma más\n"
+                                   "eficiente\n")
+
 
 class AllListConverterApp(MDApp):
-    dialog = None
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Config.set("kivy", "window_icon", "pinia.ico")
+        self.title = "All List-Converter"
+        self.icon = "pinia.ico"
+
     def build(self):
 
         self.theme_cls.primary_palette = "BlueGray"
         #self.theme_cls.primary_hue = "200"
         #self.theme_cls.accent_palette = "Red"
         #self.theme_cls.theme_style = "Dark"
-        Builder.load_file("AllListConverterApp.kv")
+        self.root = Builder.load_file("All_List_Converter.kv")
 
 
 
