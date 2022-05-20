@@ -1,0 +1,156 @@
+Principal:
+#Version2:
+<Principal>
+    eti1: eti1
+    barra: barra
+    cbox_dyno: cbox_dyno
+    cbox_versio: cbox_versio
+    MDToolbar:
+        title: "All List-Converter"
+        pos_hint: {"top": 1}
+        right_action_items : [["folder", lambda x : root.seleccionar_archivo()],["account-question", lambda x : app.show_acerca_de()]]
+    MDBoxLayout:
+
+        MDLabel:
+            text: "    Listas a realizar :"
+            size_hint: None, None
+            size: "150dp", "48dp"
+            halign: "left"
+            pos_hint: {"top": .90}
+        MDCheckbox:
+            id: cbox_dyno
+            size_hint: None, None
+            size: "30dp", "48dp"
+            halign: "left"
+            pos_hint: {"top": .90}
+            active: root.estado_cbox_dyno
+        MDLabel:
+            text: "Dyno"
+            size_hint: None, None
+            size: "48dp", "48dp"
+            halign: "left"
+            color:"black"
+            pos_hint: {"top": .90}
+        MDCheckbox:
+            id: cbox_versio
+            size_hint: None, None
+            size: "30dp", "48dp"
+            halign: "left"
+            pos_hint: {"top": .90}
+            active: root.estado_cbox_versio
+        MDLabel:
+            text: "Versio"
+            size_hint: None, None
+            size: "48dp", "48dp"
+            halign: "left"
+            color:"black"
+            pos_hint: {"top": .90}
+
+    ProgressBar:
+        id: barra
+        size_hint: (1,.1)
+        max:99
+        min:0
+        pos_hint: {"top": .88}
+    MDLabel:
+        id: eti1
+        halign: "center"
+        text: "Arrastra y suelta la pauta de continuidad aqui..."
+        color: 0,0,0, 0.5
+        italic: True
+        #pos_hint: "500dp"
+
+<Acerca_de>
+    size_hint: (None,None)
+    size: "400dp", "300dp"
+    MDLabel:
+        adaptive_size: True
+        halign: "center"
+        pos_hint: {"top": 1}
+        text: "Autor: David Israel González Dávila"
+    MDFlatButton:
+        text: "okok"
+        on_release: self.cerrar()
+
+
+
+<Version2>
+    md_bg_color: (1,1,1,1)
+
+
+    StackLayout:
+        MDBoxLayout:
+            md_bg_color: 0,0,0,1
+            size_hint_y: .1
+            #pos_hint: {"top":1}
+            MDIconButton:
+                icon: "language-python"
+                pos_hint: {"center_y":.5}
+                theme_text_color: "Custom"
+                text_color: "white"
+            MDLabel:
+                text: "All List Converter by DG."
+                pos_hint: {"center_y":.5}
+                color: "white"
+
+        MDBoxLayout:
+            #adaptive_size : True
+            md_bg_color: 0,0,0, 0.5
+            size_hint: (1,.07)
+            MDLabel:
+                text: "    Listas a realizar :"
+                size_hint: None, None
+                size: "135dp", "48dp"
+                pos_hint: {'center': .5 }
+            MDCheckbox:
+                size_hint: None, None
+                size: "48dp", "48dp"
+                pos_hint: {'center': 0.5}
+                active: True
+            MDLabel:
+                text: "Dyno"
+                size_hint: None, None
+                size: "48dp", "48dp"
+                color:"black"
+                pos_hint: {"center": 0.5}
+            MDCheckbox:
+                size_hint: None, None
+                size: "48dp", "48dp"
+                pos_hint: {"center": 0.5}
+                active: True
+            MDLabel:
+                text: "Versio"
+                size_hint: None, None
+                size: "48dp", "48dp"
+                color:"black"
+                pos_hint: {"center": 0.5}
+
+            MDIconButton:
+                icon: "folder"
+                text: "Elegir archivo"
+                halign: "right"
+                pos_hint: {"center_x": 0.5}
+                text_color: 0, 0, 0, .9
+                icon_color: 0, 0, 0, .9
+                line_color: 0, 0, 0, .5
+            MDIconButton:
+                adaptive_size : True
+                icon:"account-question"
+                halign: "right"
+                pos_hint: {"center_x": .5}
+                text_color: 0, 0, 0, .9
+                icon_color: 0, 0, 0, .9
+                line_color: 0, 0, 0, .5
+
+        MDBoxLayout:
+            size_hint: (1,0.83)
+            #md_bg_color: 1,1,0,1
+            MDLabel:
+                halign: "center"
+                text: "Arrastra y suelta la pauta de continuidad aqui..."
+                color: 0,0,0, 0.5
+                italic: True
+                #pos_hint: "500dp"
+
+
+
