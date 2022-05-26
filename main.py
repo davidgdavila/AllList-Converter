@@ -4,7 +4,6 @@ import time
 from kivy import Config
 from kivy.lang import Builder
 from kivy.properties import BooleanProperty, StringProperty
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.popup import Popup
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -20,9 +19,9 @@ class Nuevo_Hilo(object):
         root = tk.Tk()
         root.withdraw()
         d = os.path.dirname(ruta_abrir)
-        s = os.path.basename(ruta_abrir).replace(".xlsx", "")
+        self.s = os.path.basename(ruta_abrir).replace(".xlsx", "")
         filename = fd.asksaveasfilename(
-            initialfile = s + ".txt",
+            initialfile = self.s + ".txt",
             title = 'Salvar Archivo',
             initialdir = d,
             filetypes = (('text files', '*.txt'), ('All files', '*.*')))
@@ -34,11 +33,12 @@ class Nuevo_Hilo(object):
         else:
             MDApp.get_running_app().root.eti1.text = "Arrastra y suelta la pauta aquí."
 
-    def cargar_barra(self):
-        for i in range(0,100):
+    def cargar_barra(self,ruta_abrir):
+        s= os.path.basename(ruta_abrir).replace(".xlsx", "")
+        for i in range(0,99):
             valor =+ i
-            time.sleep(0.05)
-            MDApp.get_running_app().root.eti1.text = "Convirtiendo archivo..." + str(round(valor)) + "%"
+            time.sleep(0.04)
+            MDApp.get_running_app().root.eti1.text = "Convirtiendo pauta..."+ s + " " + str(round(valor)) + "%"
             MDApp.get_running_app().root.barra.value = valor
 
     def texto_limpio(self, titulo_serie):
@@ -85,6 +85,7 @@ class Nuevo_Hilo(object):
         with open(d + "_dyno.txt", 'w') as stream:
             stream.write(texto)
         MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
+        MDApp.get_running_app().root.barra.value = 100
 
 
     def crear_lista_versio(self,ruta_guardar):
@@ -103,11 +104,12 @@ class Nuevo_Hilo(object):
         with open(d +"_versio.txt", 'w') as stream:
             stream.write(texto)
         MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
+        MDApp.get_running_app().root.barra.value = 100
 
     def procesar_archivo(self, ruta_abrir, ruta_guardar):
         texto = ""
         try:
-            hilo2 = threading.Thread(target = self.cargar_barra)
+            hilo2 = threading.Thread(target = self.cargar_barra, args= (ruta_abrir,))
             hilo2.start()
             doc = load_workbook(filename=ruta_abrir, data_only=True)
             self.hoja1 = doc.active
@@ -146,22 +148,24 @@ class Principal(MDScreen):
         self.estado_cbox_versio= True
         self.estado_cbox_dyno = True
 
-
-
     def _on_file_drop(self, window, file_path, *args):
+        self.ruta_abrir = file_path.decode(encoding="utf-8")
         print("dyno:" + str(self.ids.cbox_dyno.active))
         print("versio:" + str(self.ids.cbox_versio.active))
 
-        if self.ids.cbox_dyno.active or self.ids.cbox_versio.active:
-            self.ruta_abrir = file_path.decode(encoding="utf-8")
-            self.hilo()
-
-
+        if self.ids.cbox_dyno.active:
+            if self.ids.cbox_versio.active:
+                self.hilo()
+            else:
+                self.hilo()
         else:
-            self.ids.eti1.text = "Debe de seleccionar al menos una lista"
+            if self.ids.cbox_versio.active:
+                self.hilo()
+            else:
+                self.ids.eti1.text = "Debe de seleccionar al menos una lista"
 
     def hilo(self):
-        hilo_ventana_salvar = threading.Thread(target= Nuevo_Hilo().seleccionar_salvar_archivo, args=(self.ruta_abrir,))
+        hilo_ventana_salvar = threading.Thread(target= self.seleccionar_salvar_archivo,)
         hilo_ventana_salvar.start()
 
     def seleccionar_salvar_archivo(self):
@@ -202,26 +206,25 @@ class Principal(MDScreen):
         self.ventana_acercad = Popup(
             title = "Acerca de AllListConverter",
             content = contenido,
-            size_hint =(.7,.7))
+            size_hint =(.6,.6))
         self.ventana_acercad.open()
 
 class Acerca_de(MDBoxLayout):
-    texto_etiqueta= StringProperty("Fecha: 20/mayo/2022\n\n"
-                                   "Autor: David Israel González Dávila.\n"
+    texto_etiqueta= StringProperty("Built on May 05th, 2022\n\n"
+                                   "Powered by David González Software.\n"
                                    "david.gdavila08@gmail.com \n"
-                                   "Versión: 1.0.1\n\n"
-                                
-                                   "AllListConverter fue crreado para realizar\n"
-                                   "las playlist de canal 14 de una forma más\n"
-                                   "eficiente\n")
+                                   "Runtime Version: 1.0.1\n\n"
+                                   "Python 3.9, kivy 2.1.0, kivymd 0.104.2 \n\n"
+                                   "AllListConverter was created to make K2 and \n"
+                                   "versio system list in a more efficient way\n")
 
 
 class AllListConverterApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        Config.set("kivy", "window_icon", "pinia.ico")
+        Config.set("kivy", "window_icon", "manzanaverde.ico")
         self.title = "All List-Converter"
-        self.icon = "pinia.ico"
+        self.icon = "manzanaverde.ico"
 
     def build(self):
 
