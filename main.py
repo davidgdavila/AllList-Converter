@@ -37,7 +37,7 @@ class Nuevo_Hilo(object):
         s= os.path.basename(ruta_abrir).replace(".xlsx", "")
         for i in range(0,99):
             valor =+ i
-            time.sleep(0.04)
+            time.sleep(0.02)
             MDApp.get_running_app().root.eti1.text = "Convirtiendo pauta..."+ s + " " + str(round(valor)) + "%"
             MDApp.get_running_app().root.barra.value = valor
 
