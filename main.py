@@ -13,6 +13,10 @@ from kivy.core.window import Window
 import tkinter as tk
 from tkinter import filedialog as fd
 
+bandera = False
+numero = 0
+rutag= ""
+
 class Nuevo_Hilo(object):
 
     def seleccionar_salvar_archivo(self, ruta_abrir):
@@ -34,14 +38,23 @@ class Nuevo_Hilo(object):
             MDApp.get_running_app().root.eti1.text = "Arrastra y suelta la pauta aquí."
 
     def cargar_barra(self,ruta_abrir):
+        global numero,rutag
         s= os.path.basename(ruta_abrir).replace(".xlsx", "")
-        for i in range(0,99):
-            valor =+ i
-            time.sleep(0.02)
-            MDApp.get_running_app().root.eti1.text = "Convirtiendo pauta..."+ s + " " + str(round(valor)) + "%"
-            MDApp.get_running_app().root.barra.value = valor
+        rutag = s
 
-    def texto_limpio(self, titulo_serie):
+
+        for i in range(0,99):
+            if bandera:
+                break
+            else:
+                valor =+ i
+                time.sleep(0.02)
+                MDApp.get_running_app().root.eti1.text = "Convirtiendo pauta..."+ s + " " + str(round(valor)) + "%"
+                MDApp.get_running_app().root.barra.value = valor
+                numero = valor
+
+
+    def texto_limpio(self, texto):
         reemplazar = (
             ("Á", "A"),
             ("É", "E"),
@@ -54,12 +67,16 @@ class Nuevo_Hilo(object):
             (",", ""),
         )
         for a, b in reemplazar:
-            titulo_serie = titulo_serie.replace(a, b)
-        return titulo_serie
+            texto = texto.replace(a, b)
+        return texto
+
+    def quitar_espacios(self, texto):
+        texto.replace(" ","")
+        return(texto)
 
     def crear_lista_dyno(self, ruta_guardar):
         texto = "<section> " + self.texto_limpio(str(self.hoja1["G3"].value)) + "\n"
-        for i in range(1, self.longitudfilas):
+        for i in range(1, self.longitudfilas+1):
             E = self.hoja1["E" + str(i)].value
             D = self.hoja1["D" + str(i)].value
             F = self.hoja1["F" + str(i)].value
@@ -68,7 +85,7 @@ class Nuevo_Hilo(object):
                 if self.texto_limpio(str(F)).__contains__("SPOT") or self.texto_limpio(str(F)).__contains__("RTC"):
                     texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
                 else:
-                    if self.texto_limpio(str(F)).__contains__("SERIE"):
+                    if self.texto_limpio(str(F)).__contains__("SERIE") or self.texto_limpio(str(F)).__contains__("CLASIFICACIONES"):
                         pass
                     else:
                         if E:
@@ -84,13 +101,17 @@ class Nuevo_Hilo(object):
         d = ruta_guardar.replace(".txt", "")
         with open(d + "_dyno.txt", 'w') as stream:
             stream.write(texto)
+        for valor in range(numero+1, 101):
+            time.sleep(0.02)
+            MDApp.get_running_app().root.eti1.text = "Convirtiendo pauta..." + rutag + " " + str(round(valor)) + "%"
+            MDApp.get_running_app().root.barra.value = valor
         MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
-        MDApp.get_running_app().root.barra.value = 100
+        #MDApp.get_running_app().root.barra.value = 100
 
 
     def crear_lista_versio(self,ruta_guardar):
         texto = ""
-        for i in range(1, self.longitudfilas):
+        for i in range(1, self.longitudfilas+1):
             E = self.hoja1["E"+ str(i)].value
             F = self.hoja1["F" + str(i)].value
             G = self.hoja1["G" + str(i)].value
