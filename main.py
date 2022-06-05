@@ -1,4 +1,5 @@
 import os
+import re
 import threading
 import time
 from kivy import Config
@@ -61,10 +62,19 @@ class Nuevo_Hilo(object):
             ("Í", "I"),
             ("Ó", "O"),
             ("Ú", "U"),
+            ("Ñ", "N"),
             (" ", "_"),
             (".", ""),
             (":", ""),
             (",", ""),
+            ("¡", ""),
+            ("!", ""),
+            ("¿", ""),
+            ("?", ""),
+            ("…", ""),
+            ("#", ""),
+            ("\n", "_"),
+            ("\t", "_"),
         )
         for a, b in reemplazar:
             texto = texto.replace(a, b)
@@ -77,27 +87,21 @@ class Nuevo_Hilo(object):
     def crear_lista_dyno(self, ruta_guardar):
         texto = "<section> " + self.texto_limpio(str(self.hoja1["G3"].value)) + "\n"
         for i in range(1, self.longitudfilas+1):
-            E = self.hoja1["E" + str(i)].value
-            D = self.hoja1["D" + str(i)].value
-            F = self.hoja1["F" + str(i)].value
+            E = str(self.hoja1["E" + str(i)].value)
+            E = E.replace(" ","")
+            D = str(self.hoja1["D" + str(i)].value)
+            F = str(self.hoja1["F" + str(i)].value)
+            F = self.texto_limpio(F)
 
-            if D:
-                if self.texto_limpio(str(F)).__contains__("SPOT") or self.texto_limpio(str(F)).__contains__("RTC"):
-                    texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
-                else:
-                    if self.texto_limpio(str(F)).__contains__("SERIE") or self.texto_limpio(str(F)).__contains__("CLASIFICACIONES"):
-                        pass
-                    else:
-                        if E:
-                            texto += "<section> " + self.texto_limpio(str(F)) + "\n" \
-                                     + str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" + "99:99:99:99" + "\n"
-                        else:
-                            pass
+
+            if E == "None" or E == "PLAYLIST" or E == "":
+                pass
             else:
-                if E:
-                    texto += str(E).replace(" ", "") + "\t" + "99:99:99:99" + "\t" "99:99:99:99" + "\n"
+                if D == "None" or "-" in D or "CAPSULA" in F or len(D) != 8:
+                    texto += E + "\t" + "99:99:99:99" "\t" + "99:99:99:99" + "\n"
                 else:
-                    pass
+                    texto += "<section> " + F + "\n" + \
+                             E + "\t" + "99:99:99:99" "\t" + "99:99:99:99" + "\n"
         d = ruta_guardar.replace(".txt", "")
         with open(d + "_dyno.txt", 'w') as stream:
             stream.write(texto)
