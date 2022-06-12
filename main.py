@@ -20,23 +20,7 @@ rutag= ""
 
 class Nuevo_Hilo(object):
 
-    def seleccionar_salvar_archivo(self, ruta_abrir):
-        root = tk.Tk()
-        root.withdraw()
-        d = os.path.dirname(ruta_abrir)
-        self.s = os.path.basename(ruta_abrir).replace(".xlsx", "")
-        filename = fd.asksaveasfilename(
-            initialfile = self.s + ".txt",
-            title = 'Salvar Archivo',
-            initialdir = d,
-            filetypes = (('text files', '*.txt'), ('All files', '*.*')))
-        ruta_guardar = filename
-        if filename:
-            hilo_procesar = threading.Thread(target = self.procesar_archivo,
-                                             args=(ruta_abrir, ruta_guardar))
-            hilo_procesar.start()
-        else:
-            MDApp.get_running_app().root.eti1.text = "Arrastra y suelta la pauta aquí."
+
 
     def cargar_barra(self,ruta_abrir):
         global numero,rutag
@@ -134,8 +118,7 @@ class Nuevo_Hilo(object):
     def procesar_archivo(self, ruta_abrir, ruta_guardar):
         texto = ""
         try:
-            hilo2 = threading.Thread(target = self.cargar_barra, args= (ruta_abrir,))
-            hilo2.start()
+            MDApp.get_running_app().correrHilo("cargar_barra", ruta_abrir, ruta_guardar)
             doc = load_workbook(filename=ruta_abrir, data_only=True)
             self.hoja1 = doc.active
             self.filas = tuple(self.hoja1.rows)
@@ -158,6 +141,25 @@ class Nuevo_Hilo(object):
             MDApp.get_running_app().root.eti1.text = "Error: No abriste un archivo de excel"
         except:
             MDApp.get_running_app().root.eti1.text = "Error desconocido. Escribe a david.gdavila08@gmail.com"
+            #print(Exception)
+
+    def seleccionar_salvar_archivo(self, ruta_abrir):
+        self.ruta_abrir = ruta_abrir
+
+        root = tk.Tk()
+        root.withdraw()
+        directorio_pauta=os.path.dirname(self.ruta_abrir) #direccion de la pauta
+        nombre_pauta=os.path.basename(self.ruta_abrir).replace(".xlsx","")
+        filename = fd.asksaveasfilename(
+            initialfile= nombre_pauta+".txt",
+            title='Salvar Archivo',
+            initialdir=directorio_pauta,
+            filetypes=(('text files', '*.txt'), ('All files', '*.*')))
+        self.ruta_guardar=filename
+        if filename:
+            MDApp.get_running_app().correrHilo("procesar_archivo", self.ruta_abrir, self.ruta_guardar)
+        else:
+            pass
 
 class Principal(MDScreen):
     texto = ""
@@ -175,23 +177,13 @@ class Principal(MDScreen):
 
     def _on_file_drop(self, window, file_path, *args):
         self.ruta_abrir = file_path.decode(encoding="utf-8")
-        print("dyno:" + str(self.ids.cbox_dyno.active))
-        print("versio:" + str(self.ids.cbox_versio.active))
-
-        if self.ids.cbox_dyno.active:
-            if self.ids.cbox_versio.active:
-                self.hilo()
-            else:
-                self.hilo()
+        if self.ids.cbox_dyno.active or self.ids.cbox_versio.active:
+            MDApp.get_running_app().correrHilo("salvar_archivo", self.ruta_abrir, "d")
         else:
-            if self.ids.cbox_versio.active:
-                self.hilo()
-            else:
-                self.ids.eti1.text = "Debe de seleccionar al menos una lista"
+            self.ids.eti1.text = "Debe de seleccionar al menos una lista"
 
-    def hilo(self):
-        hilo_ventana_salvar = threading.Thread(target= self.seleccionar_salvar_archivo,)
-        hilo_ventana_salvar.start()
+
+
 
     def seleccionar_salvar_archivo(self):
         root = tk.Tk()
@@ -222,7 +214,7 @@ class Principal(MDScreen):
             if filename:
                 self.seleccionar_salvar_archivo()
             else:
-                self.ids.eti1.text = "Arrastra y suelta la pauta aqui."
+                self.ids.eti1.text = "Arrastra y suelta la pauta de continuidad aquí."
         else:
             self.ids.eti1.text = "Debe de seleccionar al menos una lista"
 
@@ -250,6 +242,19 @@ class AllListConverterApp(MDApp):
         Config.set("kivy", "window_icon", "manzanaverde.ico")
         self.title = "All List-Converter"
         self.icon = "manzanaverde.ico"
+
+    def correrHilo(self, hilo1, ruta_abrir, ruta_guardar):
+
+        if hilo1 == "procesar_archivo":
+            hiloS = threading.Thread(target=Nuevo_Hilo().procesar_archivo, args=(ruta_abrir, ruta_guardar))
+            hiloS.start()
+        elif hilo1 == "cargar_barra":
+            hilo2 = threading.Thread(target=Nuevo_Hilo().cargar_barra, args=(ruta_abrir,))
+            hilo2.start()
+        elif hilo1 == "salvar_archivo":
+            hiloperra = threading.Thread(target=Nuevo_Hilo().seleccionar_salvar_archivo,
+                                         args=(ruta_abrir, ))
+            hiloperra.start()
 
     def build(self):
 
