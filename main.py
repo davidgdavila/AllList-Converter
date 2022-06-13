@@ -1,43 +1,51 @@
-import os
-import re
 import threading
 import time
 from kivy import Config
+from kivy.core.window import Window
 from kivy.lang import Builder
-from kivy.properties import BooleanProperty, StringProperty
+from kivy.properties import StringProperty
 from kivy.uix.popup import Popup
 from kivymd.app import MDApp
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.screen import MDScreen
-from openpyxl import load_workbook
-from kivy.core.window import Window
 import tkinter as tk
 from tkinter import filedialog as fd
+import os
+from kivymd.uix.boxlayout import MDBoxLayout
+from openpyxl import load_workbook
 
-bandera = False
-numero = 0
-rutag= ""
+class Acerca_de(MDBoxLayout):
+    texto_etiqueta= StringProperty("Built on May 05th, 2022\n\n"
+                                   "Powered by David González Software.\n"
+                                   "david.gdavila08@gmail.com \n"
+                                   "Runtime Version: 1.2.1\n\n"
+                                   "Python 3.9, kivy 2.0.1, kivymd 0.104.2 \n\n"
+                                   "AllListConverter was created to make K2 and \n"
+                                   "versio system list in a more efficient way\n")
+class AllListConverterApp(MDApp):
 
-class Nuevo_Hilo(object):
+    directorio_inicial = os.path.expanduser("~") + "\\documents\\"
+    bandera = False
+    numero = 0
+    rutag = ""
 
+    def __init__(self, **kwargs):
+        super(AllListConverterApp, self).__init__(**kwargs)
+        Config.set("kivy", "window_icon", "manzanaverde.ico")
+        self.title = "All List-Converter"
+        self.icon = "manzanaverde.ico"
+        Window.bind(on_drop_file=self._on_file_drop)
 
+    def _on_file_drop(self, window, file_path, *args):
+        self.ruta_abrir = file_path.decode(encoding="utf-8")
+        if self.root.ids.cbox_dyno.active or self.root.ids.cbox_versio.active:
+            #self.seleccionar_salvar_archivo()
+            hilo_ventana_salvar = threading.Thread(name = "hilo_ventana_salvar", target=self.seleccionar_salvar_archivo, )
+            hilo_ventana_salvar.start()
+        else:
+            self.root.ids.eti1.text = "Debe de seleccionar al menos una lista"
 
-    def cargar_barra(self,ruta_abrir):
-        global numero,rutag
-        s= os.path.basename(ruta_abrir).replace(".xlsx", "")
-        rutag = s
-
-
-        for i in range(0,99):
-            if bandera:
-                break
-            else:
-                valor =+ i
-                time.sleep(0.02)
-                MDApp.get_running_app().root.eti1.text = "Convirtiendo pauta..."+ s + " " + str(round(valor)) + "%"
-                MDApp.get_running_app().root.barra.value = valor
-                numero = valor
-
+    def build(self):
+        self.theme_cls.primary_palette = "BlueGray"
+        self.root = Builder.load_file("All_List_Converter.kv")
 
     def texto_limpio(self, texto):
         reemplazar = (
@@ -64,11 +72,21 @@ class Nuevo_Hilo(object):
             texto = texto.replace(a, b)
         return texto
 
-    def quitar_espacios(self, texto):
-        texto.replace(" ","")
-        return(texto)
+    def cargar_barra(self):
+        s = os.path.basename(self.ruta_abrir).replace(".xlsx", "")
+        self.rutag = s
 
-    def crear_lista_dyno(self, ruta_guardar):
+        for i in range(0, 99):
+            if self.bandera:
+                break
+            else:
+                valor = + i
+                time.sleep(0.02)
+                self.root.ids.eti1.text = "Convirtiendo pauta..." + s + " " + str(round(valor)) + "%"
+                self.root.ids.barra.value = valor
+                self.numero = valor
+
+    def crear_lista_dyno(self):
         texto = "<section> " + self.texto_limpio(str(self.hoja1["G3"].value)) + "\n"
         for i in range(1, self.longitudfilas+1):
             E = str(self.hoja1["E" + str(i)].value)
@@ -76,8 +94,6 @@ class Nuevo_Hilo(object):
             D = str(self.hoja1["D" + str(i)].value)
             F = str(self.hoja1["F" + str(i)].value)
             F = self.texto_limpio(F)
-
-
             if E == "None" or E == "PLAYLIST" or E == "":
                 pass
             else:
@@ -86,18 +102,17 @@ class Nuevo_Hilo(object):
                 else:
                     texto += "<section> " + F + "\n" + \
                              E + "\t" + "99:99:99:99" "\t" + "99:99:99:99" + "\n"
-        d = ruta_guardar.replace(".txt", "")
+        d = self.ruta_guardar.replace(".txt", "")
         with open(d + "_dyno.txt", 'w') as stream:
             stream.write(texto)
-        for valor in range(numero+1, 101):
+        for valor in range(self.numero+1, 101):
             time.sleep(0.02)
-            MDApp.get_running_app().root.eti1.text = "Convirtiendo pauta..." + rutag + " " + str(round(valor)) + "%"
-            MDApp.get_running_app().root.barra.value = valor
-        MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
+            self.root.ids.eti1.text = "Convirtiendo pauta..." + self.rutag + " " + str(round(valor)) + "%"
+            self.root.ids.barra.value = valor
+        self.root.ids.eti1.text = "¡Se ha convertido el archivo!\n" + self.ruta_guardar
         #MDApp.get_running_app().root.barra.value = 100
 
-
-    def crear_lista_versio(self,ruta_guardar):
+    def crear_lista_versio(self):
         texto = ""
         for i in range(1, self.longitudfilas+1):
             E = self.hoja1["E"+ str(i)].value
@@ -109,161 +124,83 @@ class Nuevo_Hilo(object):
             texto += "\t\t\t\t"+str(E) + "\t" + str(F) + "\t" + str(G) + "\t"\
                      + str(H) + "\t\t" + str(J) + "\t\t" + str(L) + "\n"
             texto = texto.replace(str(None), "")
-        d =ruta_guardar.replace(".txt","")
+        d =self.ruta_guardar.replace(".txt","")
         with open(d +"_versio.txt", 'w') as stream:
             stream.write(texto)
-        MDApp.get_running_app().root.eti1.text = "¡Se ha convertido el archivo!\n" + ruta_guardar
-        MDApp.get_running_app().root.barra.value = 100
+        self.root.ids.eti1.text = "¡Se ha convertido el archivo!\n" + self.ruta_guardar
+        self.root.ids.barra.value = 100
 
-    def procesar_archivo(self, ruta_abrir, ruta_guardar):
-        texto = ""
+    def procesar_archivo(self):
+
         try:
-            MDApp.get_running_app().correrHilo("cargar_barra", ruta_abrir, ruta_guardar)
-            doc = load_workbook(filename=ruta_abrir, data_only=True)
+            doc = load_workbook(filename=self.ruta_abrir, data_only=True)
             self.hoja1 = doc.active
-            self.filas = tuple(self.hoja1.rows)
-            self.longitudfilas = len(self.filas)
-            if  MDApp.get_running_app().root.cbox_dyno.active:
-                self.crear_lista_dyno(ruta_guardar)
-                if MDApp.get_running_app().root.cbox_versio.active:
-                    self.crear_lista_versio(ruta_guardar)
-                else:
-                    pass
-            elif MDApp.get_running_app().root.cbox_versio.active:
-                self.crear_lista_versio(ruta_guardar)
+            filas = tuple(self.hoja1.rows)
+            self.longitudfilas = len(filas)
+            if self.root.ids.cbox_dyno.active and self.root.ids.cbox_versio.active:
+                self.crear_lista_dyno()
+                self.crear_lista_versio()
+            elif self.root.ids.cbox_versio.active:
+                self.crear_lista_versio()
+            elif self.root.ids.cbox_dyno.active:
+                self.crear_lista_dyno()
             else:
                 pass
-
         except IndexError:
-            MDApp.get_running_app().root.eti1.text = "El formato no es correcto"
+            self.root.ids.eti1.text = "El formato no es correcto"
 
         except UnicodeDecodeError:
-            MDApp.get_running_app().root.eti1.text = "Error: No abriste un archivo de excel"
-        except:
-            MDApp.get_running_app().root.eti1.text = "Error desconocido. Escribe a david.gdavila08@gmail.com"
-            #print(Exception)
+            self.root.ids.eti1.text = "Error: No abriste un archivo de excel"
+        except Exception as e:
 
-    def seleccionar_salvar_archivo(self, ruta_abrir):
-        self.ruta_abrir = ruta_abrir
-
-        root = tk.Tk()
-        root.withdraw()
-        directorio_pauta=os.path.dirname(self.ruta_abrir) #direccion de la pauta
-        nombre_pauta=os.path.basename(self.ruta_abrir).replace(".xlsx","")
-        filename = fd.asksaveasfilename(
-            initialfile= nombre_pauta+".txt",
-            title='Salvar Archivo',
-            initialdir=directorio_pauta,
-            filetypes=(('text files', '*.txt'), ('All files', '*.*')))
-        self.ruta_guardar=filename
-        if filename:
-            MDApp.get_running_app().correrHilo("procesar_archivo", self.ruta_abrir, self.ruta_guardar)
-        else:
-            pass
-
-class Principal(MDScreen):
-    texto = ""
-    ruta_abrir = ""
-    ruta_guardar = ""
-    directorio_inicial = os.path.expanduser("~") + "\\documents\\"
-    estado_cbox_dyno= BooleanProperty()
-    estado_cbox_versio = BooleanProperty()
-
-    def __init__(self,**kwargs):
-        super().__init__(**kwargs)
-        Window.bind(on_drop_file=self._on_file_drop)
-        self.estado_cbox_versio= True
-        self.estado_cbox_dyno = True
-
-    def _on_file_drop(self, window, file_path, *args):
-        self.ruta_abrir = file_path.decode(encoding="utf-8")
-        if self.ids.cbox_dyno.active or self.ids.cbox_versio.active:
-            MDApp.get_running_app().correrHilo("salvar_archivo", self.ruta_abrir, "d")
-        else:
-            self.ids.eti1.text = "Debe de seleccionar al menos una lista"
-
-
-
+            self.root.ids.eti1.text = repr(e) + " Escribe a david.gdavila08@gmail.com"
 
     def seleccionar_salvar_archivo(self):
         root = tk.Tk()
         root.withdraw()
-        directorio_pauta=os.path.dirname(self.ruta_abrir) #direccion de la pauta
-        nombre_pauta=os.path.basename(self.ruta_abrir).replace(".xlsx","")
-        filename = fd.asksaveasfilename(
-            initialfile= nombre_pauta+".txt",
-            title='Salvar Archivo',
-            initialdir=directorio_pauta,
-            filetypes=(('text files', '*.txt'), ('All files', '*.*')))
-        self.ruta_guardar=filename
-        if filename:
-            hilo1 = threading.Thread(target= Nuevo_Hilo().procesar_archivo, args=(self.ruta_abrir,self.ruta_guardar))
-            hilo1.start()
+        directorio_pauta = os.path.dirname(self.ruta_abrir) #direccion de la pauta
+        nombre_pauta = os.path.basename(self.ruta_abrir).replace(".xlsx", "")
+        self.ruta_guardar = fd.asksaveasfilename(
+            initialfile = nombre_pauta + ".txt",
+            title = 'Salvar archivo.',
+            initialdir = directorio_pauta,
+            filetypes = (('text files', '*.txt'), ('All files', '*.*')))
+        if self.ruta_guardar:
+            root.destroy()
+            hilo_1_procesar_archivo = threading.Thread(name = "hilo_procesar_archivo", target= self.procesar_archivo)
+            hilo_1_procesar_archivo.start()
+            hilo_2_cargar_barra = threading.Thread(name="cargar_barra", target=self.cargar_barra, )
+            hilo_2_cargar_barra.start()
         else:
-            pass
+            root.destroy()
+
+    def hilo_seleccionar_archivo(self):
+        hilo_selecionar_archivo = threading.Thread(target = self.seleccionar_archivo, )
+        hilo_selecionar_archivo.start()
 
     def seleccionar_archivo(self):
-        if self.ids.cbox_dyno.active or self.ids.cbox_versio.active:
+        if self.root.ids.cbox_dyno.active or self.root.ids.cbox_versio.active:
             root = tk.Tk()
             root.withdraw()
-            filename = fd.askopenfilename(
+            self.ruta_abrir = fd.askopenfilename(
                 title='Seleccionar Pauta...',
                 initialdir=self.directorio_inicial,
                 filetypes=(('excel files', '*.xlsx'), ('All files', '*.*')))
-            self.ruta_abrir = filename
-            if filename:
-                self.seleccionar_salvar_archivo()
+            if self.ruta_abrir:
+                root.destroy()
+                hilo_ventana_salvar = threading.Thread(target=self.seleccionar_salvar_archivo, )
+                hilo_ventana_salvar.start()
             else:
-                self.ids.eti1.text = "Arrastra y suelta la pauta de continuidad aquí."
+                root.destroy()
         else:
-            self.ids.eti1.text = "Debe de seleccionar al menos una lista"
+            self.root.ids.eti1.text = "Debe de seleccionar al menos una lista"
 
     def show_acerca_de(self):
         contenido = Acerca_de()
         self.ventana_acercad = Popup(
             title = "Acerca de AllListConverter",
             content = contenido,
-            size_hint =(.6,.6))
+            size_hint =(.5,.7))
         self.ventana_acercad.open()
-
-class Acerca_de(MDBoxLayout):
-    texto_etiqueta= StringProperty("Built on May 05th, 2022\n\n"
-                                   "Powered by David González Software.\n"
-                                   "david.gdavila08@gmail.com \n"
-                                   "Runtime Version: 1.0.1\n\n"
-                                   "Python 3.9, kivy 2.1.0, kivymd 0.104.2 \n\n"
-                                   "AllListConverter was created to make K2 and \n"
-                                   "versio system list in a more efficient way\n")
-
-
-class AllListConverterApp(MDApp):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        Config.set("kivy", "window_icon", "manzanaverde.ico")
-        self.title = "All List-Converter"
-        self.icon = "manzanaverde.ico"
-
-    def correrHilo(self, hilo1, ruta_abrir, ruta_guardar):
-
-        if hilo1 == "procesar_archivo":
-            hiloS = threading.Thread(target=Nuevo_Hilo().procesar_archivo, args=(ruta_abrir, ruta_guardar))
-            hiloS.start()
-        elif hilo1 == "cargar_barra":
-            hilo2 = threading.Thread(target=Nuevo_Hilo().cargar_barra, args=(ruta_abrir,))
-            hilo2.start()
-        elif hilo1 == "salvar_archivo":
-            hiloperra = threading.Thread(target=Nuevo_Hilo().seleccionar_salvar_archivo,
-                                         args=(ruta_abrir, ))
-            hiloperra.start()
-
-    def build(self):
-
-        self.theme_cls.primary_palette = "BlueGray"
-        #self.theme_cls.primary_hue = "200"
-        #self.theme_cls.accent_palette = "Red"
-        #self.theme_cls.theme_style = "Dark"
-        self.root = Builder.load_file("All_List_Converter.kv")
-
-
 
 AllListConverterApp().run()
