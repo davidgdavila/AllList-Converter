@@ -3,7 +3,7 @@ MDScreen:
         title: "All List-Converter 2.0"
         elevation: 20
         pos_hint: {"top": 1}
-        right_action_items : [["folder", lambda x : app.hilo_seleccionar_archivo()],["account-question", lambda x : app.show_acerca_de()]]
+        right_action_items : [["folder", lambda x : app.hilo_seleccionar_archivo()],["account-question", lambda x : app.show_acerca_de()], ["lightbulb-on-outline", lambda x : app.modo_oscuro()]]
 
     MDBoxLayout:
         MDLabel:
@@ -19,6 +19,7 @@ MDScreen:
             halign: "left"
             pos_hint: {"top": .90}
             active: True
+
         MDLabel:
             text: "K2/Dyno"
             size_hint: None, None

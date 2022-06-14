@@ -23,21 +23,18 @@ class Acerca_de(MDBoxLayout):
 class AllListConverterApp(MDApp):
 
     directorio_inicial = os.path.expanduser("~") + "\\documents\\"
-    bandera = False
-    numero = 0
-    rutag = ""
+    bandera = True
 
     def __init__(self, **kwargs):
         super(AllListConverterApp, self).__init__(**kwargs)
         Config.set("kivy", "window_icon", "manzanaverde.ico")
-        self.title = "All List-Converter"
+        self.title = "All List-Converter 2.0"
         self.icon = "manzanaverde.ico"
         Window.bind(on_drop_file=self._on_file_drop)
 
     def _on_file_drop(self, window, file_path, *args):
         self.ruta_abrir = file_path.decode(encoding="utf-8")
         if self.root.ids.cbox_dyno.active or self.root.ids.cbox_versio.active:
-            #self.seleccionar_salvar_archivo()
             hilo_ventana_salvar = threading.Thread(name = "hilo_ventana_salvar", target=self.seleccionar_salvar_archivo, )
             hilo_ventana_salvar.start()
         else:
@@ -47,7 +44,24 @@ class AllListConverterApp(MDApp):
         self.theme_cls.primary_palette = "BlueGray"
         self.root = Builder.load_file("All_List_Converter.kv")
 
-    def texto_limpio(self, texto):
+    def modo_oscuro(self):
+        if self.bandera:
+            self.bandera=False
+        else:
+            self.bandera=True
+
+        if self.bandera:
+            self.theme_cls.theme_style = "Light"
+            self.root.ids.cbox_dyno.selected_color = (0, 0, 0, 1)
+            self.root.ids.cbox_versio.selected_color = (0, 0, 0, 1)
+
+        else:
+            self.theme_cls.theme_style = "Dark"
+            self.root.ids.cbox_dyno.selected_color = (1, 1, 1, 1)
+            self.root.ids.cbox_versio.selected_color = (1, 1, 1, 1)
+
+    @staticmethod
+    def texto_limpio(texto):
         reemplazar = (
             ("Á", "A"),
             ("É", "E"),
@@ -73,18 +87,18 @@ class AllListConverterApp(MDApp):
         return texto
 
     def cargar_barra(self):
-        s = os.path.basename(self.ruta_abrir).replace(".xlsx", "")
-        self.rutag = s
+        self.bandera_dyno = True
+        self.bandera_versio = True
+        self.valor_barra = 0
 
         for i in range(0, 99):
-            if self.bandera:
-                break
+            if self.bandera_versio and self.bandera_dyno:
+                self.root.ids.eti1.text = "Convirtiendo pauta..." + self.nombre_pauta + " " + str(round(i)) + "%"
+                self.root.ids.barra.value = i
+                self.valor_barra = i
+                time.sleep(0.04)
             else:
-                valor = + i
-                time.sleep(0.02)
-                self.root.ids.eti1.text = "Convirtiendo pauta..." + s + " " + str(round(valor)) + "%"
-                self.root.ids.barra.value = valor
-                self.numero = valor
+                break
 
     def crear_lista_dyno(self):
         texto = "<section> " + self.texto_limpio(str(self.hoja1["G3"].value)) + "\n"
@@ -105,11 +119,13 @@ class AllListConverterApp(MDApp):
         d = self.ruta_guardar.replace(".txt", "")
         with open(d + "_dyno.txt", 'w') as stream:
             stream.write(texto)
-        for valor in range(self.numero+1, 101):
-            time.sleep(0.02)
-            self.root.ids.eti1.text = "Convirtiendo pauta..." + self.rutag + " " + str(round(valor)) + "%"
-            self.root.ids.barra.value = valor
-        self.root.ids.eti1.text = "¡Se ha convertido el archivo!\n" + self.ruta_guardar
+        self.bandera_dyno = False
+        if not self.bandera_versio:
+            for i in range(self.valor_barra+1, 101):
+                self.root.ids.eti1.text = "Convirtiendo pauta..." + self.nombre_pauta + " " + str(i) + "%"
+                self.root.ids.barra.value = i
+                time.sleep(0.02)
+            self.root.ids.eti1.text = "¡Se ha convertido el archivo!\n" + self.ruta_guardar
         #MDApp.get_running_app().root.barra.value = 100
 
     def crear_lista_versio(self):
@@ -127,8 +143,13 @@ class AllListConverterApp(MDApp):
         d =self.ruta_guardar.replace(".txt","")
         with open(d +"_versio.txt", 'w') as stream:
             stream.write(texto)
-        self.root.ids.eti1.text = "¡Se ha convertido el archivo!\n" + self.ruta_guardar
-        self.root.ids.barra.value = 100
+        self.bandera_versio = False
+        if not self.bandera_dyno:
+            for i in range(self.valor_barra + 1, 101):
+                self.root.ids.eti1.text = "Convirtiendo pauta..." + self.nombre_pauta + " " + str(i) + "%"
+                self.root.ids.barra.value = i
+                time.sleep(0.02)
+            self.root.ids.eti1.text = "¡Se ha convertido el archivo!\n" + self.ruta_guardar
 
     def procesar_archivo(self):
 
@@ -138,11 +159,17 @@ class AllListConverterApp(MDApp):
             filas = tuple(self.hoja1.rows)
             self.longitudfilas = len(filas)
             if self.root.ids.cbox_dyno.active and self.root.ids.cbox_versio.active:
+                hilo_dyno = threading.Thread(target=self.crear_lista_dyno, )
+                hilo_versio = threading.Thread(target=self.crear_lista_versio, )
+                hilo_dyno.start()
+                hilo_versio.start()
                 self.crear_lista_dyno()
                 self.crear_lista_versio()
             elif self.root.ids.cbox_versio.active:
+                self.bandera_dyno = False
                 self.crear_lista_versio()
             elif self.root.ids.cbox_dyno.active:
+                self.bandera_versio = False
                 self.crear_lista_dyno()
             else:
                 pass
@@ -159,9 +186,9 @@ class AllListConverterApp(MDApp):
         root = tk.Tk()
         root.withdraw()
         directorio_pauta = os.path.dirname(self.ruta_abrir) #direccion de la pauta
-        nombre_pauta = os.path.basename(self.ruta_abrir).replace(".xlsx", "")
+        self.nombre_pauta = os.path.basename(self.ruta_abrir).replace(".xlsx", "")
         self.ruta_guardar = fd.asksaveasfilename(
-            initialfile = nombre_pauta + ".txt",
+            initialfile = self.nombre_pauta + ".txt",
             title = 'Salvar archivo.',
             initialdir = directorio_pauta,
             filetypes = (('text files', '*.txt'), ('All files', '*.*')))
